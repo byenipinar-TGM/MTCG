@@ -29,6 +29,7 @@ namespace byenipinar_MTCG
 
         private void HandleRequest()
         {
+            Response responseMsg = new Response();
             try
             {
                 string authenticationToken = ExtractAuthorizationToken(request);
@@ -61,31 +62,31 @@ namespace byenipinar_MTCG
                             this.db = new Data(userObject);
                             if (request.Contains("POST /users"))
                             {
-                                Response responseMsg = new Response("users");
+                                
                                 if (!db.DoesUserExist())
                                 {
                                     db.AddUser();
-                                    response = responseMsg.GetResponseMessage(201);
+                                    response = responseMsg.GetResponseMessage("users", 201);
                                 }
-                                else response = responseMsg.GetResponseMessage(409);
+                                else response = responseMsg.GetResponseMessage("users", 409);
 
                             }
                             else if (request.Contains("POST /sessions"))
                             {
-                                Response responseMsg = new Response("sessions");
+                                
                                 if (db.VerifyUserCredentials(userObject))
                                 {
-                                    response = responseMsg.GetResponseMessage(200) + "Token: " + userObject.Username + "-mtcgToken\r\n";
+                                    response = responseMsg.GetResponseMessage("sessions", 200) + "Token: " + userObject.Username + "-mtcgToken\r\n";
                                 }
                                 else
                                 {
-                                    response = responseMsg.GetResponseMessage(401);
+                                    response = responseMsg.GetResponseMessage("sessions", 401);
                                 }
                             }
                         }
                         else if (request.Contains("POST /packages"))
                         {
-                            Response responseMsg = new Response("packages");
+                            
                             if (authenticationToken.Length > 0)
                             {
                                 if (authenticationToken == adminToken)
@@ -96,9 +97,9 @@ namespace byenipinar_MTCG
                                     db.SpeicherePackages(jsonPayload);
                                     db.SaveCardsFromRequest(jsonPayload);
 
-                                    response = responseMsg.GetResponseMessage(201);
+                                    response = responseMsg.GetResponseMessage("packages", 201);
                                 }
-                                else response = responseMsg.GetResponseMessage(401);
+                                else response = responseMsg.GetResponseMessage("packages", 401);
                             }
                         }
                         else if (request.Contains("PUT /users/"))
@@ -161,7 +162,7 @@ namespace byenipinar_MTCG
                 }
                 else if (request.Contains("POST /transactions/packages"))
                 {
-                    Response responseMsg = new Response("transactions/packages");
+                    
                     List<int> packagelist = new List<int>();
                     int coins;
                     string username = db.GetUsername(authenticationToken);
@@ -179,21 +180,21 @@ namespace byenipinar_MTCG
 
                             db.BuyPackage(username, packagelist[0]);
 
-                            response = responseMsg.GetResponseMessage(200);
+                            response = responseMsg.GetResponseMessage("transactions/packages", 200);
                         }
                         else
                         {
-                            response = responseMsg.GetResponseMessage(403);
+                            response = responseMsg.GetResponseMessage("transactions/packages", 403);
                         }
                     }
                     else
                     {
-                        response = responseMsg.GetResponseMessage(404);
+                        response = responseMsg.GetResponseMessage("transactions/packages", 404);
                     }
                 }
                 else if (request.Contains("GET /cards"))
                 {
-                    Response responseMsg = new Response("cards");
+                    
                     if (db.TokenExist(authenticationToken))
                     {
                         Console.WriteLine(db.TokenExist(authenticationToken));
@@ -201,18 +202,18 @@ namespace byenipinar_MTCG
 
                         if (userCards.Length > 2)
                         {
-                            response = responseMsg.GetResponseMessage(200) + userCards + "\r\n";
+                            response = responseMsg.GetResponseMessage("cards", 200) + userCards + "\r\n";
                         }
                         else
                         {
-                            response = responseMsg.GetResponseMessage(204);
+                            response = responseMsg.GetResponseMessage("cards", 204);
                         }
                     }
-                    else response = responseMsg.GetResponseMessage(401);
+                    else response = responseMsg.GetResponseMessage("cards", 401);
                 }
                 else if (request.Contains("GET /deck"))
                 {
-                    Response responseMsg = new Response("get_deck");
+                    
                     if (db.TokenExist(authenticationToken))
                     {
                         string deck = "";
@@ -228,14 +229,14 @@ namespace byenipinar_MTCG
 
                         if (deck.Length > 2)
                         {
-                            response = responseMsg.GetResponseMessage(200) + deck + "\r\n";
+                            response = responseMsg.GetResponseMessage("get_deck", 200) + deck + "\r\n";
                         }
                         else
                         {
-                            response = responseMsg.GetResponseMessage(204);
+                            response = responseMsg.GetResponseMessage("get_deck", 204);
                         }
                     }
-                    else response = responseMsg.GetResponseMessage(401);
+                    else response = responseMsg.GetResponseMessage("get_deck", 401);
                 }
             }
             catch (Exception e)
