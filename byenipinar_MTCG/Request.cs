@@ -210,13 +210,40 @@ namespace byenipinar_MTCG
                     }
                     else response = responseMsg.GetResponseMessage(401);
                 }
+                else if (request.Contains("GET /deck"))
+                {
+                    Response responseMsg = new Response("get_deck");
+                    if (db.TokenExist(authenticationToken))
+                    {
+                        string deck = "";
+
+                        if (request.Contains("format=plain"))
+                        {
+                            deck = db.GetCardsFromDeck(authenticationToken, false);
+                        }
+                        else
+                        {
+                            deck = db.GetCardsFromDeck(authenticationToken, true);
+                        }
+
+                        if (deck.Length > 2)
+                        {
+                            response = responseMsg.GetResponseMessage(200) + deck + "\r\n";
+                        }
+                        else
+                        {
+                            response = responseMsg.GetResponseMessage(204);
+                        }
+                    }
+                    else response = responseMsg.GetResponseMessage(401);
                 }
+            }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
         }
-        
+
 
 
         private string ExtractAuthorizationToken(string request)

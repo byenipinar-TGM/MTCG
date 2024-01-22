@@ -33,15 +33,18 @@ namespace byenipinar_MTCG
 
         public void DataAutomation()
         {
+            DropTable(connectionString, "deck");
             DropTable(connectionString, "user_packages");
             DropTable(connectionString, "cards");
             DropTable(connectionString, "packages");
             DropTable(connectionString, "users");
+            
 
             CreateTable(connectionString, "users", "CREATE TABLE IF NOT EXISTS users (token varchar(255) ,username VARCHAR(255) NOT NULL PRIMARY KEY UNIQUE,password VARCHAR(255) NOT NULL,coins int NOT NULL);");
             CreateTable(connectionString, "packages", "CREATE TABLE IF NOT EXISTS packages (package_id SERIAL PRIMARY KEY, bought BOOLEAN NOT NULL);");
             CreateTable(connectionString, "cards", "CREATE TABLE IF NOT EXISTS cards (id VARCHAR(255) PRIMARY KEY, name VARCHAR(255) NOT NULL, damage DOUBLE PRECISION NOT NULL, package_id INTEGER REFERENCES packages(package_id));");
             CreateTable(connectionString, "user_packages", "CREATE TABLE IF NOT EXISTS user_packages (username VARCHAR(255) REFERENCES users(username), package_id INT REFERENCES packages(package_id), PRIMARY KEY (username, package_id));");
+            CreateTable(connectionString, "deck", "CREATE TABLE IF NOT EXISTS deck (username VARCHAR(255) REFERENCES users(username),card_id VARCHAR(255) REFERENCES cards(id),PRIMARY KEY (username, card_id));");
         }
 
         private bool TablesExist(string connectionString)
@@ -424,44 +427,6 @@ namespace byenipinar_MTCG
         }
 
 
-        public bool IsPackageNotBought(int packageId)
-        {
-            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
-            {
-                connection.Open();
-
-                try
-                {
-                    // SELECT-Anweisung, um den Status des Pakets abzurufen
-                    string selectQuery = "SELECT bought FROM packages WHERE package_id = @PackageId;";
-                    using (NpgsqlCommand selectCommand = new NpgsqlCommand(selectQuery, connection))
-                    {
-                        selectCommand.Parameters.AddWithValue("@PackageId", packageId);
-
-                        // Ausführung der Abfrage und Abrufen des Ergebnisses
-                        object result = selectCommand.ExecuteScalar();
-
-                        // Überprüfung, ob ein Ergebnis vorhanden ist
-                        if (result != null && bool.TryParse(result.ToString(), out bool isBought))
-                        {
-                            return !isBought; // Negieren, um zu überprüfen, ob es nicht gekauft ist
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Kein Paket mit der package_id {packageId} gefunden oder ungültiger Bought-Wert.");
-                            return false; // Oder ein anderer Platzhalterwert im Fehlerfall
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Fehler beim Überprüfen des Paketstatus: {ex.Message}");
-                    return false; // Oder ein anderer Platzhalterwert im Fehlerfall
-                }
-            }
-        }
-
-
         public List<int> GetAvailablePackages()
         {
             using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
@@ -581,6 +546,70 @@ namespace byenipinar_MTCG
 
             // JSON-Zeichenfolge zurückgeben
             return jsonResult;
+        }
+
+
+        public string GetCardsFromDeck(string token, bool format)
+        {
+            List<Card> userCards = new List<Card>();
+
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+
+                    string sql = "SELECT cards.id, cards.name, cards.damage " +
+                                 "FROM users " +
+                                 "JOIN user_packages ON users.username = user_packages.username " +
+                                 "JOIN cards ON user_packages.package_id = cards.package_id " +
+                                 "JOIN deck ON users.username = deck.username AND cards.id = deck.card_id " +
+                                 "WHERE users.token = @token;";
+
+                    using (NpgsqlCommand command = new NpgsqlCommand(sql, connection))
+                    {
+                        command.Parameters.AddWithValue("@token", token);
+
+                        using (NpgsqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                Card card = new Card
+                                {
+                                    Id = reader.GetString(0),
+                                    Name = reader.GetString(1),
+                                    Damage = reader.GetDouble(2)
+                                };
+
+                                userCards.Add(card);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Fehler beim Zugriff auf die Datenbank: " + ex.Message);
+                }
+            }
+
+            if (format)
+            {
+                // Formatierung als Text
+                StringBuilder formattedText = new StringBuilder();
+
+                foreach (Card card in userCards)
+                {
+                    formattedText.AppendLine($"ID: {card.Id}, Name: {card.Name}, Damage: {card.Damage}");
+                }
+
+                return formattedText.ToString();
+            }
+            else
+            {
+                // JSON-Format
+                string jsonResult = System.Text.Json.JsonSerializer.Serialize(userCards, new JsonSerializerOptions { WriteIndented = true });
+                return jsonResult;
+            }
         }
 
 
