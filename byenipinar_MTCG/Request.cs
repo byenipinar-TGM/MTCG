@@ -62,7 +62,7 @@ namespace byenipinar_MTCG
                             this.db = new Data(userObject);
                             if (request.Contains("POST /users"))
                             {
-                                
+
                                 if (!db.DoesUserExist())
                                 {
                                     db.AddUser();
@@ -73,7 +73,7 @@ namespace byenipinar_MTCG
                             }
                             else if (request.Contains("POST /sessions"))
                             {
-                                
+
                                 if (db.VerifyUserCredentials(userObject))
                                 {
                                     response = responseMsg.GetResponseMessage("sessions", 200) + "Token: " + userObject.Username + "-mtcgToken\r\n";
@@ -86,7 +86,7 @@ namespace byenipinar_MTCG
                         }
                         else if (request.Contains("POST /packages"))
                         {
-                            
+
                             if (authenticationToken.Length > 0)
                             {
                                 if (authenticationToken == adminToken)
@@ -102,9 +102,36 @@ namespace byenipinar_MTCG
                                 else response = responseMsg.GetResponseMessage("packages", 401);
                             }
                         }
-                        else if (request.Contains("PUT /users/"))
+                        else if (request.Contains("PUT /deck"))
                         {
-                            // Handle PUT /users/{username}
+                            if (db.TokenExist(authenticationToken))
+                            {
+                                List<string> cardcount = JsonSerializer.Deserialize<List<string>>(jsonPayload);
+                                int zaehler = cardcount.Count;
+                                bool ok = false;
+                                if(zaehler != 4)
+                                {
+                                    response = responseMsg.GetResponseMessage("put_deck", 400);
+                                }
+                                else if(zaehler == 4)
+                                {
+                                    for (int i = 0; i < 4; i++)
+                                    {
+                                        if (db.CardacquireUser(authenticationToken, cardcount[i]) == false) ok = true;
+                                    }
+
+                                    if (!ok)
+                                    {
+                                        db.DeleteDeckFromUser(db.GetUsername(authenticationToken));
+                                        for (int i = 0; i < 4; i++)
+                                        {
+                                            db.AddDeck(db.GetUsername(authenticationToken), cardcount[i]);
+                                        }
+                                        response = responseMsg.GetResponseMessage("put_deck", 200);
+                                    }
+                                } else response = responseMsg.GetResponseMessage("put_deck", 403);
+                            }
+                            else response = responseMsg.GetResponseMessage("put_deck", 401);
                         }
                         else if (request.Contains("POST /packages"))
                         {
@@ -122,7 +149,7 @@ namespace byenipinar_MTCG
                         {
                             // Handle GET /deck
                         }
-                        else if (request.Contains("PUT /deck"))
+                        else if (request.Contains("PUT /users/"))
                         {
                             // Handle PUT /deck
                         }

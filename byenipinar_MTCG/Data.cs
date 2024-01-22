@@ -613,6 +613,92 @@ namespace byenipinar_MTCG
         }
 
 
+        public bool CardacquireUser(string token, string cardId)
+        {
+            // SQL-Abfrage
+            string sqlQuery = "SELECT COUNT(*) " +
+                              "FROM users " +
+                              "JOIN user_packages ON users.username = user_packages.username " +
+                              "JOIN cards ON user_packages.package_id = cards.package_id " +
+                              "WHERE users.token = @token AND cards.id = @cardId;";
+
+            // Ergebnisinitialisierung
+            int count = 0;
+
+            // Verbindung zur Datenbank
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                connection.Open();
+
+                // SQL-Befehl und Parameter
+                using (NpgsqlCommand command = new NpgsqlCommand(sqlQuery, connection))
+                {
+                    command.Parameters.AddWithValue("@token", token);
+                    command.Parameters.AddWithValue("@cardId", cardId);
+
+                    // Ausführung der Abfrage
+                    count = Convert.ToInt32(command.ExecuteScalar());
+                }
+            }
+
+            // Überprüfung des Ergebnisses
+            return count > 0;
+        }
+
+        public bool DeleteDeckFromUser(string username)
+        {
+            // SQL-DELETE-Abfrage
+            string sqlQuery = "DELETE FROM deck WHERE username = @username;";
+
+            // Anzahl der gelöschten Zeilen
+            int rowsAffected = 0;
+
+            // Verbindung zur Datenbank
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                connection.Open();
+
+                // SQL-Befehl und Parameter
+                using (NpgsqlCommand command = new NpgsqlCommand(sqlQuery, connection))
+                {
+                    command.Parameters.AddWithValue("@username", username);
+
+                    // Ausführung der DELETE-Abfrage
+                    rowsAffected = command.ExecuteNonQuery();
+                }
+            }
+
+            // Überprüfung der Anzahl der gelöschten Zeilen
+            return rowsAffected > 0;
+        }
+
+        public bool AddDeck(string username, string cardId)
+        {
+            // SQL-INSERT-Abfrage
+            string sqlQuery = "INSERT INTO deck (username, card_id) VALUES (@username, @cardId);";
+
+            // Anzahl der eingefügten Zeilen
+            int rowsAffected = 0;
+
+            // Verbindung zur Datenbank
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                connection.Open();
+
+                // SQL-Befehl und Parameter
+                using (NpgsqlCommand command = new NpgsqlCommand(sqlQuery, connection))
+                {
+                    command.Parameters.AddWithValue("@username", username);
+                    command.Parameters.AddWithValue("@cardId", cardId);
+
+                    // Ausführung der INSERT-Abfrage
+                    rowsAffected = command.ExecuteNonQuery();
+                }
+            }
+
+            // Überprüfung der Anzahl der eingefügten Zeilen
+            return rowsAffected > 0;
+        }
 
     }
 }

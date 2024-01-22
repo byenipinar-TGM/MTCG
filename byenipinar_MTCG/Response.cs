@@ -42,6 +42,11 @@ namespace byenipinar_MTCG
                 { "get_deck_200", "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"message\": \"Das Deck enthält Karten, die Antwort enthält diese\"}\r\n" },
                 { "get_deck_204", "HTTP/1.1 204 No Card\r\nContent-Type: application/json\r\n\r\n{\"message\": \"Die Anfrage war in Ordnung, aber das Deck enthält keine Karten\"}\r\n" },
                 { "get_deck_401", "HTTP/1.1 401 Token Error\r\nContent-Type: application/json\r\n\r\n{\"message\": \"Access-Token fehlt oder ist ungültig\"}\r\n" },
+
+                { "put_deck_200", "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"message\": \"The deck has cards, the response contains these\"}\r\n" },
+                { "put_deck_204", "HTTP/1.1 204 No Card\r\nContent-Type: application/json\r\n\r\n{\"message\": \"The request was fine, but the deck doesn't have any cards\"}\r\n" },
+                { "put_deck_401", "HTTP/1.1 401 Token Error\r\nContent-Type: application/json\r\n\r\n{\"message\": \"Access token is missing or invalid\"}\r\n" },
+
             };
 
             // Standardfall
