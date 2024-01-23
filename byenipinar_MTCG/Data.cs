@@ -855,6 +855,53 @@ namespace byenipinar_MTCG
             }
         }
 
+        public string GetUserStatisticsJson(string token)
+        {
+            try
+            {
+                using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    using (NpgsqlCommand command = new NpgsqlCommand())
+                    {
+                        command.Connection = connection;
+                        command.CommandType = CommandType.Text;
+                        command.CommandText = "SELECT name, elo, wins, losses FROM users WHERE token = @token;";
+                        command.Parameters.AddWithValue("@token", token);
+
+                        using (NpgsqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                var userStats = new
+                                {
+                                    Name = reader.GetString(0),
+                                    Elo = reader.GetInt32(1),
+                                    Wins = reader.GetInt32(2),
+                                    Losses = reader.GetInt32(3)
+                                };
+
+                                // Serialize userStats object to JSON
+                                string jsonResult = JsonConvert.SerializeObject(userStats, Formatting.Indented);
+
+                                return jsonResult;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Fehlerbehandlung bei einer Ausnahme
+                Console.WriteLine("Fehler: " + ex.Message);
+            }
+
+            // Return an empty JSON object if no data found or an exception occurred
+            return "{}";
+        }
+
+
 
     }
 }

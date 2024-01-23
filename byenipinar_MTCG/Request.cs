@@ -309,6 +309,13 @@ namespace byenipinar_MTCG
                         response = responseMsg.GetResponseMessage("get_users", 404);
                     }
                 }
+                else if (request.Contains("GET /stats"))
+                {
+                    if (db.TokenExist(authenticationToken))
+                    {
+                        response = responseMsg.GetResponseMessage("get_stats",200) + db.GetUserStatisticsJson(authenticationToken) + "\r\n";
+                    }
+                }
             }
             catch (Exception e)
             {
