@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using byenipinar_MTCG.GameClasses;
 using System.Diagnostics;
+using Newtonsoft.Json;
 
 namespace byenipinar_MTCG
 {
@@ -56,7 +57,7 @@ namespace byenipinar_MTCG
                     {
                         if (request.Contains("POST /users") || request.Contains("POST /sessions"))
                         {
-                            var userObject = JsonSerializer.Deserialize<User>(jsonPayload);
+                            var userObject = System.Text.Json.JsonSerializer.Deserialize<User>(jsonPayload);
                             Console.WriteLine(userObject);
 
                             this.db = new Data(userObject);
@@ -90,7 +91,7 @@ namespace byenipinar_MTCG
                             {
                                 if (authenticationToken == adminToken)
                                 {
-                                    var packagesJson = JsonSerializer.Deserialize<List<PackageOfCards>>(jsonPayload);
+                                    var packagesJson = System.Text.Json.JsonSerializer.Deserialize<List<PackageOfCards>>(jsonPayload);
                                     this.db = new Data();
 
                                     db.SpeicherePackages(jsonPayload);
@@ -105,7 +106,7 @@ namespace byenipinar_MTCG
                         {
                             if (db.TokenExist(authenticationToken))
                             {
-                                List<string> cardcount = JsonSerializer.Deserialize<List<string>>(jsonPayload);
+                                List<string> cardcount = System.Text.Json.JsonSerializer.Deserialize<List<string>>(jsonPayload);
                                 int zaehler = cardcount.Count;
                                 bool ok = false;
                                 if(zaehler != 4)
@@ -314,6 +315,24 @@ namespace byenipinar_MTCG
                     if (db.TokenExist(authenticationToken))
                     {
                         response = responseMsg.GetResponseMessage("get_stats",200) + db.GetUserStatisticsJson(authenticationToken) + "\r\n";
+                    }
+                    else
+                    {
+                        responseMsg.GetResponseMessage("get_stats", 401);
+                    }
+                }
+                else if (request.Contains("GET /scoreboard"))
+                {
+                    if (db.TokenExist(authenticationToken))
+                    {
+                        List<User> scoreboard = db.GetScoreboard();
+                        var filteredScoreboard = scoreboard.Select(u => new { u.Name, u.Wins, u.Losses, u.Elo }).ToList();
+                        string jsonResult = JsonConvert.SerializeObject(filteredScoreboard, Formatting.Indented);
+                        response = responseMsg.GetResponseMessage("get_scoreboard", 200) + jsonResult + "\r\n";
+                    }
+                    else
+                    {
+                        response = responseMsg.GetResponseMessage("get_scoreboard", 401);
                     }
                 }
             }

@@ -902,6 +902,55 @@ namespace byenipinar_MTCG
         }
 
 
+        public List<User> GetScoreboard()
+        {
+            var scoreboardList = new List<User>();
+
+            try
+            {
+                using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    using (NpgsqlCommand command = new NpgsqlCommand())
+                    {
+                        command.Connection = connection;
+                        command.CommandType = CommandType.Text;
+                        command.CommandText = "SELECT name, elo, wins, losses FROM users WHERE Name IS NOT NULL AND Name <> '' ORDER BY Elo DESC";
+
+                        using (NpgsqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                var name = reader.GetString(0);
+                                var elo = reader.GetInt32(1);
+                                var wins = reader.GetInt32(2);
+                                var losses = reader.GetInt32(3);
+
+                                scoreboardList.Add(new User
+                                {
+                                    Name = name,
+                                    Elo = elo,
+                                    Wins = wins,
+                                    Losses = losses
+                                }); 
+
+                            }
+                        }
+                    }
+                    connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Fehlerbehandlung bei einer Ausnahme
+                Console.WriteLine("Fehler: " + ex.ToString());
+            }
+
+            return scoreboardList;
+        }
+
+
 
     }
 }

@@ -58,6 +58,9 @@ namespace byenipinar_MTCG
                 { "get_stats_200", "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"message\": \"The stats could be retrieved successfully.\"}\r\n" },
                 { "get_stats_401", "HTTP/1.1 401 Token Error\r\nContent-Type: application/json\r\n\r\n{\"message\": \"Access token is missing or invalid\"}\r\n" },
 
+                { "get_scoreboard_200", "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"message\": \"The scoreboard could be retrieved successfully.\"}\r\n" },
+                { "get_scoreboard_401", "HTTP/1.1 401 Token Error\r\nContent-Type: application/json\r\n\r\n{\"message\": \"Access token is missing or invalid\"}\r\n" },
+
 
             };
 
