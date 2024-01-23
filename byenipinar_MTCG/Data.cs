@@ -40,7 +40,7 @@ namespace byenipinar_MTCG
             DropTable(connectionString, "users");
             
 
-            CreateTable(connectionString, "users", "CREATE TABLE IF NOT EXISTS users (token varchar(255) ,username VARCHAR(255) NOT NULL PRIMARY KEY UNIQUE,password VARCHAR(255) NOT NULL,coins int NOT NULL);");
+            CreateTable(connectionString, "users", "CREATE TABLE IF NOT EXISTS users (token varchar(255) ,username VARCHAR(255) NOT NULL PRIMARY KEY ,password VARCHAR(255) NOT NULL,coins int NOT NULL ,name VARCHAR(255) ,bio VARCHAR(255) ,image VARCHAR(255) ,elo int NOT NULL ,wins int NOT NULL ,losses int NOT NULL);");
             CreateTable(connectionString, "packages", "CREATE TABLE IF NOT EXISTS packages (package_id SERIAL PRIMARY KEY, bought BOOLEAN NOT NULL);");
             CreateTable(connectionString, "cards", "CREATE TABLE IF NOT EXISTS cards (id VARCHAR(255) PRIMARY KEY, name VARCHAR(255) NOT NULL, damage DOUBLE PRECISION NOT NULL, package_id INTEGER REFERENCES packages(package_id));");
             CreateTable(connectionString, "user_packages", "CREATE TABLE IF NOT EXISTS user_packages (username VARCHAR(255) REFERENCES users(username), package_id INT REFERENCES packages(package_id), PRIMARY KEY (username, package_id));");
@@ -118,7 +118,7 @@ namespace byenipinar_MTCG
             {
                 connection.Open();
                 // Füge den Benutzer zur Datenbank hinzu
-                using (NpgsqlCommand command = new NpgsqlCommand("INSERT INTO users (token, username, password, coins) VALUES (@token, @username, @password, @coins)", connection))
+                using (NpgsqlCommand command = new NpgsqlCommand("INSERT INTO users (token, username, password, coins, elo, wins, losses) VALUES (@token, @username, @password, @coins, 0, 0, 0)", connection))
                 {
                     string token = User.Username + "-mtcgToken";
 
@@ -153,6 +153,26 @@ namespace byenipinar_MTCG
                 }
             }
         }
+
+        public bool DoesUserExist(string user)
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                connection.Open();
+
+                // Verwende den übergebenen Benutzernamen (user) anstelle von User.Username
+                using (NpgsqlCommand command = new NpgsqlCommand("SELECT COUNT(*) FROM users WHERE username = @username;", connection))
+                {
+                    command.Parameters.AddWithValue("@username", user);
+
+                    int count = Convert.ToInt32(command.ExecuteScalar());
+
+                    connection.Close();
+                    return count > 0;
+                }
+            }
+        }
+
 
 
 
@@ -699,6 +719,142 @@ namespace byenipinar_MTCG
             // Überprüfung der Anzahl der eingefügten Zeilen
             return rowsAffected > 0;
         }
+
+
+        public string ExtractUsernameFromRequest(string request)
+        {
+            string username = string.Empty;
+
+            // Find the index of "/users/"
+            int start = request.IndexOf("/users/");
+
+            if (start != -1)
+            {
+                // Calculate the starting index of the username
+                int usernameStart = start + "/users/".Length;
+
+                // Find the index of the next space after the username
+                int spaceIndex = request.IndexOf(' ', usernameStart);
+
+                // Extract the username if space is found
+                if (spaceIndex != -1)
+                {
+                    username = request.Substring(usernameStart, spaceIndex - usernameStart);
+                }
+            }
+
+            return username;
+        }
+
+        public bool IsTokenValid(string token, string username)
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                connection.Open();
+
+                using (NpgsqlCommand command = new NpgsqlCommand())
+                {
+                    command.Connection = connection;
+                    command.CommandType = CommandType.Text;
+                    command.CommandText = "SELECT COUNT(*) FROM users WHERE username = @username AND token = @token;";
+
+                    command.Parameters.AddWithValue("@username", username);
+                    command.Parameters.AddWithValue("@token", token);
+
+                    int count = Convert.ToInt32(command.ExecuteScalar());
+
+                    return count > 0;
+                }
+            }
+        }
+
+
+        public string GetUserDataJson(string username)
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                connection.Open();
+
+                using (NpgsqlCommand command = new NpgsqlCommand())
+                {
+                    command.Connection = connection;
+                    command.CommandType = CommandType.Text;
+                    command.CommandText = "SELECT image, bio, name, username FROM users WHERE username = @username;";
+                    command.Parameters.AddWithValue("@username", username);
+
+                    using (NpgsqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            User user = new User
+                            {
+                                Image = reader.IsDBNull(0) ? null : reader.GetString(0),
+                                Bio = reader.IsDBNull(1) ? null : reader.GetString(1),
+                                Name = reader.IsDBNull(2) ? null : reader.GetString(2),
+                                Username = reader.IsDBNull(3) ? null : reader.GetString(3)
+                            };
+
+                            var result = new
+                            {
+                                Bio = user.Bio,
+                                Image = user.Image,
+                                Name = user.Name,
+                                Username = user.Username
+                            };
+
+                            // Serialize user object to JSON
+                            string jsonResult = JsonConvert.SerializeObject(user, Formatting.Indented);
+
+                            return jsonResult;
+                        }
+                    }
+                }
+            }
+
+            // Return an empty JSON object if no data found
+            return "{}";
+        }
+
+
+        public bool UpdateUserData(string username, string jsonUserData)
+        {
+            try
+            {
+                // Deserialisiere JSON-Daten in ein User-Objekt
+                User updatedUser = JsonConvert.DeserializeObject<User>(jsonUserData);
+
+                using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    using (NpgsqlCommand command = new NpgsqlCommand())
+                    {
+                        command.Connection = connection;
+                        command.CommandType = CommandType.Text;
+                        command.CommandText = "UPDATE users SET name = @name, bio = @bio, image = @image WHERE username = @username;";
+
+                        // Füge Parameter zur SQL-Abfrage hinzu
+                        command.Parameters.AddWithValue("@username", username);
+                        command.Parameters.AddWithValue("@name", updatedUser.Name);
+                        command.Parameters.AddWithValue("@bio", updatedUser.Bio);
+                        command.Parameters.AddWithValue("@image", updatedUser.Image);
+
+                        // Führe die SQL-Abfrage aus
+                        int rowsAffected = command.ExecuteNonQuery();
+
+                        // Überprüfe das Ergebnis und gib true zurück, wenn mindestens eine Zeile aktualisiert wurde
+                        return rowsAffected > 0;
+                    }
+                }
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                // Fehler beim Deserialisieren der JSON-Daten
+                Console.WriteLine("Fehler beim Deserialisieren der JSON-Daten: " + ex.Message);
+                return false;
+            }
+        }
+
 
     }
 }

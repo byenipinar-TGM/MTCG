@@ -62,8 +62,7 @@ namespace byenipinar_MTCG
                             this.db = new Data(userObject);
                             if (request.Contains("POST /users"))
                             {
-
-                                if (!db.DoesUserExist())
+                                if (!db.DoesUserExist(userObject.Username))
                                 {
                                     db.AddUser();
                                     response = responseMsg.GetResponseMessage("users", 201);
@@ -133,9 +132,29 @@ namespace byenipinar_MTCG
                             }
                             else response = responseMsg.GetResponseMessage("put_deck", 401);
                         }
-                        else if (request.Contains("POST /packages"))
+                        else if (request.Contains("PUT /users"))
                         {
-                            // Handle POST /sessions
+                            string user = "";
+
+                            user = db.ExtractUsernameFromRequest(request);
+                            Console.WriteLine(user);
+
+                            if (db.DoesUserExist(user))
+                            {
+                                if (db.IsTokenValid(authenticationToken, user) || authenticationToken == adminToken)
+                                {
+                                    db.UpdateUserData(user, jsonPayload);
+                                    response = responseMsg.GetResponseMessage("put_users", 200);
+                                }
+                                else
+                                {
+                                    response = responseMsg.GetResponseMessage("put_users", 401);
+                                }
+                            }
+                            else
+                            {
+                                response = responseMsg.GetResponseMessage("put_users", 404);
+                            }
                         }
                         else if (request.Contains("POST /packages"))
                         {
@@ -264,6 +283,31 @@ namespace byenipinar_MTCG
                         }
                     }
                     else response = responseMsg.GetResponseMessage("get_deck", 401);
+                }
+                else if (request.Contains("GET /users"))
+                {
+                    string user = "";
+
+                    user = db.ExtractUsernameFromRequest(request);
+                    Console.WriteLine(user);
+
+                    if (db.DoesUserExist(user))
+                    {
+                        string usernew = user + "-mtcgToken";
+                        if(db.IsTokenValid(authenticationToken, user) || authenticationToken == adminToken)
+                        {
+                                string dataFromUser = db.GetUserDataJson(user);
+                                response = responseMsg.GetResponseMessage("get_users", 200) + dataFromUser + "\r\n";
+                        }
+                        else
+                        {
+                            response = responseMsg.GetResponseMessage("get_users", 401);
+                        }
+                    }
+                    else
+                    {
+                        response = responseMsg.GetResponseMessage("get_users", 404);
+                    }
                 }
             }
             catch (Exception e)

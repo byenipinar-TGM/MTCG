@@ -47,6 +47,14 @@ namespace byenipinar_MTCG
                 { "put_deck_204", "HTTP/1.1 204 No Card\r\nContent-Type: application/json\r\n\r\n{\"message\": \"The request was fine, but the deck doesn't have any cards\"}\r\n" },
                 { "put_deck_401", "HTTP/1.1 401 Token Error\r\nContent-Type: application/json\r\n\r\n{\"message\": \"Access token is missing or invalid\"}\r\n" },
 
+                { "get_users_200", "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"message\": \"Data successfully retrieved\"}\r\n" },
+                { "get_users_401", "HTTP/1.1 401 Token Error\r\nContent-Type: application/json\r\n\r\n{\"message\": \"Access token is missing or invalid\"}\r\n" },
+                { "get_users_404", "HTTP/1.1 404 Not Found\r\nContent-Type: application/json\r\n\r\n{\"message\": \"User not found.\"}\r\n" },
+
+                { "put_users_200", "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"message\": \"User sucessfully updated.\"}\r\n" },
+                { "put_users_401", "HTTP/1.1 401 Token Error\r\nContent-Type: application/json\r\n\r\n{\"message\": \"Access token is missing or invalid\"}\r\n" },
+                { "put_users_404", "HTTP/1.1 404 Not Found\r\nContent-Type: application/json\r\n\r\n{\"message\": \"User not found.\"}\r\n" }
+
             };
 
             // Standardfall
