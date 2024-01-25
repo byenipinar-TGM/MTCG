@@ -339,7 +339,10 @@ namespace byenipinar_MTCG
                 }
                 else if (request.Contains("GET /tradings"))
                 {
+                    if (!db.TokenExist(authenticationToken))
+                    {
 
+                    }
                 }
                 else if (request.Contains("DELETE /tradings"))
                 {
