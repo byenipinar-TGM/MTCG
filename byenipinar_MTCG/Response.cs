@@ -101,7 +101,7 @@ namespace byenipinar_MTCG
             return Encoding.UTF8.GetBytes(response);
         }
 
-        public string GetResponseMessage(string path,int statusCode)
+        public string MessageFromResponse(string path,int statusCode)
         {
             if (messages.TryGetValue($"{path}_{statusCode}", out string message))
             {

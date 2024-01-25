@@ -68,9 +68,9 @@ namespace byenipinar_MTCG
                                 if (!db.DoesUserExist(userObject.Username))
                                 {
                                     db.AddUser();
-                                    response = responseMsg.GetResponseMessage("users", 201);
+                                    response = responseMsg.MessageFromResponse("users", 201);
                                 }
-                                else response = responseMsg.GetResponseMessage("users", 409);
+                                else response = responseMsg.MessageFromResponse("users", 409);
 
                             }
                             else if (request.Contains("POST /sessions"))
@@ -78,11 +78,11 @@ namespace byenipinar_MTCG
 
                                 if (db.VerifyUserCredentials(userObject))
                                 {
-                                    response = responseMsg.GetResponseMessage("sessions", 200) + "Token: " + userObject.Username + "-mtcgToken\r\n";
+                                    response = responseMsg.MessageFromResponse("sessions", 200) + "Token: " + userObject.Username + "-mtcgToken\r\n";
                                 }
                                 else
                                 {
-                                    response = responseMsg.GetResponseMessage("sessions", 401);
+                                    response = responseMsg.MessageFromResponse("sessions", 401);
                                 }
                             }
                         }
@@ -99,9 +99,9 @@ namespace byenipinar_MTCG
                                     db.SpeicherePackages(jsonPayload);
                                     db.SaveCardsFromRequest(jsonPayload);
 
-                                    response = responseMsg.GetResponseMessage("packages", 201);
+                                    response = responseMsg.MessageFromResponse("packages", 201);
                                 }
-                                else response = responseMsg.GetResponseMessage("packages", 401);
+                                else response = responseMsg.MessageFromResponse("packages", 401);
                             }
                         }
                         else if (request.Contains("PUT /deck"))
@@ -113,7 +113,7 @@ namespace byenipinar_MTCG
                                 bool ok = false;
                                 if(zaehler != 4)
                                 {
-                                    response = responseMsg.GetResponseMessage("put_deck", 400);
+                                    response = responseMsg.MessageFromResponse("put_deck", 400);
                                 }
                                 else if(zaehler == 4)
                                 {
@@ -129,11 +129,11 @@ namespace byenipinar_MTCG
                                         {
                                             db.AddDeck(db.GetUsername(authenticationToken), cardcount[i]);
                                         }
-                                        response = responseMsg.GetResponseMessage("put_deck", 200);
+                                        response = responseMsg.MessageFromResponse("put_deck", 200);
                                     }
-                                } else response = responseMsg.GetResponseMessage("put_deck", 403);
+                                } else response = responseMsg.MessageFromResponse("put_deck", 403);
                             }
-                            else response = responseMsg.GetResponseMessage("put_deck", 401);
+                            else response = responseMsg.MessageFromResponse("put_deck", 401);
                         }
                         else if (request.Contains("PUT /users"))
                         {
@@ -147,61 +147,45 @@ namespace byenipinar_MTCG
                                 if (db.IsTokenValid(authenticationToken, user) || authenticationToken == adminToken)
                                 {
                                     db.UpdateUserData(user, jsonPayload);
-                                    response = responseMsg.GetResponseMessage("put_users", 200);
+                                    response = responseMsg.MessageFromResponse("put_users", 200);
                                 }
                                 else
                                 {
-                                    response = responseMsg.GetResponseMessage("put_users", 401);
+                                    response = responseMsg.MessageFromResponse("put_users", 401);
                                 }
                             }
                             else
                             {
-                                response = responseMsg.GetResponseMessage("put_users", 404);
+                                response = responseMsg.MessageFromResponse("put_users", 404);
                             }
-                        }
-                        else if (request.Contains("POST /packages"))
-                        {
-                            // Handle POST /packages
-                        }
-                        else if (request.Contains("GET /cards"))
-                        {
-                            // Handle GET /cards
-                        }
-                        else if (request.Contains("GET /deck"))
-                        {
-                            // Handle GET /deck
-                        }
-                        else if (request.Contains("PUT /users/"))
-                        {
-                            // Handle PUT /deck
-                        }
-                        else if (request.Contains("GET /stats"))
-                        {
-                            // Handle GET /stats
-                        }
-                        else if (request.Contains("GET /scoreboard"))
-                        {
-                            // Handle GET /scoreboard
-                        }
-                        else if (request.Contains("POST /battles"))
-                        {
-                            // Handle POST /battles
-                        }
-                        else if (request.Contains("GET /tradings"))
-                        {
-                            // Handle GET /tradings
                         }
                         else if (request.Contains("POST /tradings"))
                         {
-                            // Handle POST /tradings
-                        }
-                        else if (request.Contains("DELETE /tradings/"))
-                        {
-                            // Handle DELETE /tradings/{tradingdealid}
-                        }
-                        else if (request.Contains("POST /tradings/"))
-                        {
-                            // Handle POST /tradings/{tradingdealid}
+                            string username = db.GetUsername(authenticationToken);
+
+                            if (!db.TokenExist(authenticationToken))
+                            {
+                                response = responseMsg.MessageFromResponse("post_trade",401);
+                                return;
+                            }
+
+                            var userObject = System.Text.Json.JsonSerializer.Deserialize<Trading>(jsonPayload);
+
+                            if (!dataBattleTrade.UserHaveCard(username, userObject.CardToTrade))
+                            {
+                                response = responseMsg.MessageFromResponse("post_trade", 403);
+                                return;
+                            }
+
+                            if (dataBattleTrade.DoesCardExistInTrading(userObject.CardToTrade))
+                            {
+                                response = responseMsg.MessageFromResponse("post_trade", 409);
+                                return;
+                            }
+
+                            dataBattleTrade.InsertTrade(userObject.CardToTrade, userObject.Id, userObject.Type, userObject.MinimumDamage, username);
+                            response = responseMsg.MessageFromResponse("post_trade", 201);
+
                         }
                     }
                     catch (Exception e)
@@ -229,16 +213,16 @@ namespace byenipinar_MTCG
 
                             db.BuyPackage(username, packagelist[0]);
 
-                            response = responseMsg.GetResponseMessage("transactions/packages", 200);
+                            response = responseMsg.MessageFromResponse("transactions/packages", 200);
                         }
                         else
                         {
-                            response = responseMsg.GetResponseMessage("transactions/packages", 403);
+                            response = responseMsg.MessageFromResponse("transactions/packages", 403);
                         }
                     }
                     else
                     {
-                        response = responseMsg.GetResponseMessage("transactions/packages", 404);
+                        response = responseMsg.MessageFromResponse("transactions/packages", 404);
                     }
                 }
                 else if (request.Contains("GET /cards"))
@@ -251,14 +235,14 @@ namespace byenipinar_MTCG
 
                         if (userCards.Length > 2)
                         {
-                            response = responseMsg.GetResponseMessage("cards", 200) + userCards + "\r\n";
+                            response = responseMsg.MessageFromResponse("cards", 200) + userCards + "\r\n";
                         }
                         else
                         {
-                            response = responseMsg.GetResponseMessage("cards", 204);
+                            response = responseMsg.MessageFromResponse("cards", 204);
                         }
                     }
-                    else response = responseMsg.GetResponseMessage("cards", 401);
+                    else response = responseMsg.MessageFromResponse("cards", 401);
                 }
                 else if (request.Contains("GET /deck"))
                 {
@@ -278,14 +262,14 @@ namespace byenipinar_MTCG
 
                         if (deck.Length > 2)
                         {
-                            response = responseMsg.GetResponseMessage("get_deck", 200) + deck + "\r\n";
+                            response = responseMsg.MessageFromResponse("get_deck", 200) + deck + "\r\n";
                         }
                         else
                         {
-                            response = responseMsg.GetResponseMessage("get_deck", 204);
+                            response = responseMsg.MessageFromResponse("get_deck", 204);
                         }
                     }
-                    else response = responseMsg.GetResponseMessage("get_deck", 401);
+                    else response = responseMsg.MessageFromResponse("get_deck", 401);
                 }
                 else if (request.Contains("GET /users"))
                 {
@@ -300,27 +284,27 @@ namespace byenipinar_MTCG
                         if(db.IsTokenValid(authenticationToken, user) || authenticationToken == adminToken)
                         {
                                 string dataFromUser = db.GetUserDataJson(user);
-                                response = responseMsg.GetResponseMessage("get_users", 200) + dataFromUser + "\r\n";
+                                response = responseMsg.MessageFromResponse("get_users", 200) + dataFromUser + "\r\n";
                         }
                         else
                         {
-                            response = responseMsg.GetResponseMessage("get_users", 401);
+                            response = responseMsg.MessageFromResponse("get_users", 401);
                         }
                     }
                     else
                     {
-                        response = responseMsg.GetResponseMessage("get_users", 404);
+                        response = responseMsg.MessageFromResponse("get_users", 404);
                     }
                 }
                 else if (request.Contains("GET /stats"))
                 {
                     if (db.TokenExist(authenticationToken))
                     {
-                        response = responseMsg.GetResponseMessage("get_stats",200) + db.GetUserStatisticsJson(authenticationToken) + "\r\n";
+                        response = responseMsg.MessageFromResponse("get_stats",200) + db.GetUserStatisticsJson(authenticationToken) + "\r\n";
                     }
                     else
                     {
-                        responseMsg.GetResponseMessage("get_stats", 401);
+                        responseMsg.MessageFromResponse("get_stats", 401);
                     }
                 }
                 else if (request.Contains("GET /scoreboard"))
@@ -330,33 +314,138 @@ namespace byenipinar_MTCG
                         List<User> scoreboard = db.GetScoreboard();
                         var filteredScoreboard = scoreboard.Select(u => new { u.Name, u.Wins, u.Losses, u.Elo }).ToList();
                         string jsonResult = JsonConvert.SerializeObject(filteredScoreboard, Formatting.Indented);
-                        response = responseMsg.GetResponseMessage("get_scoreboard", 200) + jsonResult + "\r\n";
+                        response = responseMsg.MessageFromResponse("get_scoreboard", 200) + jsonResult + "\r\n";
                     }
                     else
                     {
-                        response = responseMsg.GetResponseMessage("get_scoreboard", 401);
+                        response = responseMsg.MessageFromResponse("get_scoreboard", 401);
                     }
                 }
                 else if (request.Contains("GET /tradings"))
                 {
+                    string trade = dataBattleTrade.GetTradingDataJson();
                     if (!db.TokenExist(authenticationToken))
                     {
-
+                        response = responseMsg.MessageFromResponse("get_trade",401);
+                    }
+                    else
+                    {
+                        if (trade.Count() > 2)
+                        {
+                            response = responseMsg.MessageFromResponse("get_trade",200) + trade + "\n";
+                        }
+                        else response = responseMsg.MessageFromResponse("get_trade",205);
                     }
                 }
                 else if (request.Contains("DELETE /tradings"))
                 {
+                    string id = "";
+                    int start = request.IndexOf("/tradings/");
+
+                    id = ExtractIdFromRequest(request, "/tradings/");
+                    Console.WriteLine("Extrahier: " + id);
+
+                    if (!db.TokenExist(authenticationToken))
+                    {
+                        response = responseMsg.MessageFromResponse("del_trade",401);
+                        return;
+                    }
+
+                    if (!dataBattleTrade.IdExist(id))
+                    {
+                        response = responseMsg.MessageFromResponse("del_trade", 404);
+                        return;
+                    }
+
+                    string username = db.GetUsername(authenticationToken);
+
+                    if (!dataBattleTrade.IdToUser(id, username))
+                    {
+                        response = responseMsg.MessageFromResponse("del_trade", 403);
+                        return;
+                    }
+
+                    dataBattleTrade.DeleteTrade(id);
+                    response = responseMsg.MessageFromResponse("del_trade", 200);
 
                 }
                 else if (request.Contains("POST /tradings/"))
                 {
+                    string id = "";
+                    int start = request.IndexOf("/tradings/");
 
+                    id = ExtractIdFromRequest(request, "/tradings/");
+                    Console.WriteLine("Extrahier: " + id);
+
+                    if (!db.TokenExist(authenticationToken))
+                    {
+                        response = responseMsg.MessageFromResponse("succesful_trade", 401);
+                        return;
+                    }
+
+                    if (!dataBattleTrade.IdExist(id))
+                    {
+                        response = responseMsg.MessageFromResponse("succesful_trade", 404);
+                        return;
+                    }
+
+                    string username = db.GetUsername(authenticationToken);
+
+                    if (dataBattleTrade.IdToUser(id, username))
+                    {
+                        response = responseMsg.MessageFromResponse("succesful_trade", 410);
+                        return;
+                    }
+
+                    string extracted = dataBattleTrade.ExtractCardId(request);
+
+                    if (!dataBattleTrade.UserHaveCard(username, extracted))
+                    {
+                        response = responseMsg.MessageFromResponse("succesful_trade", 403);
+                        return;
+                    }
+
+                    string cardtotrade = dataBattleTrade.TradebyID(id);
+
+                    if (!dataBattleTrade.CheckDamage(extracted, cardtotrade))
+                    {
+                        response = responseMsg.MessageFromResponse("succesful_trade", 411);
+                        return;
+                    }
+
+                    dataBattleTrade.DeleteTradeWithId(id);
+
+                    int card1packageid = dataBattleTrade.GetPackageIdFromCardId(cardtotrade);
+                    int card2packageid = dataBattleTrade.GetPackageIdFromCardId(dataBattleTrade.ExtractCardId(request));
+
+                    dataBattleTrade.UpdatePackageIdForCard(cardtotrade, card2packageid);
+                    dataBattleTrade.UpdatePackageIdForCard(dataBattleTrade.ExtractCardId(request), card1packageid);
+
+                    response = responseMsg.MessageFromResponse("succesful_trade", 200);
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
+        }
+
+        private static string ExtractIdFromRequest(string request, string resourcePath)
+        {
+            int start = request.IndexOf(resourcePath);
+
+            if (start != -1)
+            {
+                int idStart = start + resourcePath.Length;
+                int spaceIndex = request.IndexOf(' ', idStart);
+
+                if (spaceIndex != -1)
+                {
+                    return request.Substring(idStart, spaceIndex - idStart);
+                }
+            }
+
+            return null;
         }
 
     }
