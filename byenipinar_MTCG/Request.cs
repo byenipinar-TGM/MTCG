@@ -19,10 +19,12 @@ namespace byenipinar_MTCG
         private const string adminToken = "admin-mtcgToken";
 
         public Data db { get; private set; }
+        public DataBattleTrade dataBattleTrade { get; private set; }
 
         public Request(string Request)
         {
             this.db = new Data();
+            this.dataBattleTrade = new DataBattleTrade();
             this.response = "";
             this.request = Request;
             HandleRequest();
@@ -33,7 +35,7 @@ namespace byenipinar_MTCG
             Response responseMsg = new Response();
             try
             {
-                string authenticationToken = ExtractAuthorizationToken(request);
+                string authenticationToken = db.ExtractAuthorizationToken(request);
                 int bodyStartIndex = this.request.IndexOf("{");
 
                 //string parsedAuthenticationToken = token;
@@ -335,32 +337,23 @@ namespace byenipinar_MTCG
                         response = responseMsg.GetResponseMessage("get_scoreboard", 401);
                     }
                 }
+                else if (request.Contains("GET /tradings"))
+                {
+
+                }
+                else if (request.Contains("DELETE /tradings"))
+                {
+
+                }
+                else if (request.Contains("POST /tradings/"))
+                {
+
+                }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
-        }
-
-
-
-        private string ExtractAuthorizationToken(string request)
-        {
-            const string authorizationHeader = "Authorization: Bearer ";
-            int startIndex = request.IndexOf(authorizationHeader);
-
-            if (startIndex >= 0)
-            {
-                startIndex += authorizationHeader.Length;
-                int endIndex = request.IndexOf("\r\n", startIndex);
-
-                if (endIndex >= 0)
-                {
-                    return request.Substring(startIndex, endIndex - startIndex);
-                }
-            }
-
-            return "";
         }
 
     }

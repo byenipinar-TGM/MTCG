@@ -951,6 +951,26 @@ namespace byenipinar_MTCG
         }
 
 
+        public string ExtractAuthorizationToken(string request)
+        {
+            const string authorizationHeader = "Authorization: Bearer ";
+            int startIndex = request.IndexOf(authorizationHeader);
+
+            if (startIndex >= 0)
+            {
+                startIndex += authorizationHeader.Length;
+                int endIndex = request.IndexOf("\r\n", startIndex);
+
+                if (endIndex >= 0)
+                {
+                    return request.Substring(startIndex, endIndex - startIndex);
+                }
+            }
+
+            return "";
+        }
+
+
 
     }
 }
