@@ -85,7 +85,9 @@ namespace byenipinar_MTCG
 
                 { "battle_200", "HTTP/1.1 200 Erfolgreich\r\nContent-Type: application/json\r\n\r\n{\"message\": \"The battle has been carried out successfully.\"}\r\n" },
                 { "battle_401", "HTTP/1.1 401 Token Error\r\nContent-Type: application/json\r\n\r\n{\"message\": \"Access token is missing or invalid\"}\r\n" },
-                { "batlle_402", "HTTP/1.1 402 Selber User\r\nContent-Type: application/json\r\n\r\n{\"message\": \"Same User registered twice\"}\r\n" }
+                { "batlle_402", "HTTP/1.1 402 Selber User\r\nContent-Type: application/json\r\n\r\n{\"message\": \"Same User registered twice\"}\r\n" },
+
+                { "verified_401", "HTTP/1.1 401 Verified Error\r\nContent-Type: application/json\r\n\r\n{\"message\": \"Are not Verified\"}\r\n" },
             };
 
             // Standardfall

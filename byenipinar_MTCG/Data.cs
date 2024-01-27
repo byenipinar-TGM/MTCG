@@ -40,7 +40,7 @@ namespace byenipinar_MTCG
             DropTable(connectionString, "packages");
             DropTable(connectionString, "users");
 
-            CreateTable(connectionString, "users", "CREATE TABLE IF NOT EXISTS users (token varchar(255) ,username VARCHAR(255) NOT NULL PRIMARY KEY ,password VARCHAR(255) NOT NULL,coins int NOT NULL ,name VARCHAR(255) ,bio VARCHAR(255) ,image VARCHAR(255) ,elo int NOT NULL ,wins int NOT NULL ,losses int NOT NULL, first_login BOOLEAN NOT NULL DEFAULT TRUE);");
+            CreateTable(connectionString, "users", "CREATE TABLE IF NOT EXISTS users (token varchar(255) ,username VARCHAR(255) NOT NULL PRIMARY KEY ,password VARCHAR(255) NOT NULL,coins int NOT NULL ,name VARCHAR(255) ,bio VARCHAR(255) ,image VARCHAR(255) ,elo int NOT NULL ,wins int NOT NULL ,losses int NOT NULL, first_login BOOLEAN NOT NULL DEFAULT TRUE, verification_reward varchar(255));");
             CreateTable(connectionString, "packages", "CREATE TABLE IF NOT EXISTS packages (package_id SERIAL PRIMARY KEY, bought BOOLEAN NOT NULL);");
             CreateTable(connectionString, "cards", "CREATE TABLE IF NOT EXISTS cards (id VARCHAR(255) PRIMARY KEY, name VARCHAR(255) NOT NULL, damage DOUBLE PRECISION NOT NULL, package_id INTEGER REFERENCES packages(package_id));");
             CreateTable(connectionString, "user_packages", "CREATE TABLE IF NOT EXISTS user_packages (username VARCHAR(255) REFERENCES users(username), package_id INT REFERENCES packages(package_id), PRIMARY KEY (username, package_id));");
@@ -217,15 +217,16 @@ namespace byenipinar_MTCG
                 }
             }
         }
-
         private void UpdateUserForFirstLogin(string username)
         {
             using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
             {
                 connection.Open();
+                //Muss ich Ihnen erklären
+                //using (NpgsqlCommand updateCommand = new NpgsqlCommand("UPDATE users SET coins = coins, first_login = false, verification_reward = 'verified' WHERE username = @username;", connection))
 
                 // Aktualisiere den Benutzer, um den Bonus hinzuzufügen und first_login auf false zu setzen
-                using (NpgsqlCommand updateCommand = new NpgsqlCommand("UPDATE users SET coins = coins + 20, first_login = false WHERE username = @username;", connection))
+                using (NpgsqlCommand updateCommand = new NpgsqlCommand("UPDATE users SET coins = coins, first_login = false, verification_reward = 'verified' WHERE username = @username;", connection))
                 {
                     updateCommand.Parameters.AddWithValue("@username", username);
                     updateCommand.ExecuteNonQuery();
@@ -234,6 +235,25 @@ namespace byenipinar_MTCG
                 connection.Close();
             }
         }
+
+        public bool IsUserVerified(string token)
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                connection.Open();
+                using (NpgsqlCommand command = new NpgsqlCommand("SELECT verification_reward FROM users WHERE token = @token AND verification_reward = 'verified';", connection))
+                {
+                    command.Parameters.AddWithValue("@token", token);
+
+                    using (NpgsqlDataReader reader = command.ExecuteReader())
+                    {
+                        // Wenn der Datensatz vorhanden ist, bedeutet dies, dass der Benutzer verifiziert ist
+                        return reader.Read();
+                    }
+                }
+            }
+        }
+
 
 
         public void SpeicherePackages(string jsonString)
