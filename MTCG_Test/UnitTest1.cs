@@ -227,5 +227,60 @@ namespace byenipinar_MTCG.Tests
             Assert.IsEmpty(result);
         }
 
+        [Test]
+        public void UpdatePackageIdForCard_Should_Return_False_For_NonExisting_Card()
+        {
+            // Arrange
+            string cardId = "nonExistingCardId";
+            int newPackageId = 123;
+
+            // Act
+            bool result = dataBattleTrade.UpdatePackageIdForCard(cardId, newPackageId);
+
+            // Assert
+            Assert.IsFalse(result);
+        }
+
+        [Test]
+        public void DoesCardExistInTrading_Should_Return_False_For_NonExisting_Card_In_Trading()
+        {
+            // Arrange
+            string cardId = "nonExistingCardId";
+
+            // Act
+            bool result = dataBattleTrade.DoesCardExistInTrading(cardId);
+
+            // Assert
+            Assert.IsFalse(result);
+        }
+
+        [Test]
+        public void InsertTrade_Should_Insert_Trade_Successfully()
+        {
+            // Arrange
+            string cardToTrade = "1cb6ab86-bdb2-47e5-b6e4-68c5ab389334";
+            string id = "6cd85277-4590-49d4-b0cf-ba0a921faad0";
+            string cardType = "monster";
+            double minimumDamage = 15;
+            string username = "kienboec";
+
+            // Act
+            Assert.DoesNotThrow(() => dataBattleTrade.InsertTrade(cardToTrade, id, cardType, minimumDamage, username));
+
+            // Optionally: Verify that the trade was actually inserted by querying the database or using another method
+        }
+
+        [Test]
+        public void DeleteTrade_Should_Delete_Trade_Successfully()
+        {
+            // Arrange
+            string tradeId = "1cb6ab86-bdb2-47e5-b6e4-68c5ab389334";
+
+            // Act
+            Assert.DoesNotThrow(() => dataBattleTrade.DeleteTrade(tradeId));
+
+            // Optionally: Verify that the trade was actually deleted by querying the database or using another method
+        }
+
     }
 }
