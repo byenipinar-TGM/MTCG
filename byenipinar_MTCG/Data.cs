@@ -40,7 +40,7 @@ namespace byenipinar_MTCG
             DropTable(connectionString, "packages");
             DropTable(connectionString, "users");
 
-            CreateTable(connectionString, "users", "CREATE TABLE IF NOT EXISTS users (token varchar(255) ,username VARCHAR(255) NOT NULL PRIMARY KEY ,password VARCHAR(255) NOT NULL,coins int NOT NULL ,name VARCHAR(255) ,bio VARCHAR(255) ,image VARCHAR(255) ,elo int NOT NULL ,wins int NOT NULL ,losses int NOT NULL, first_login BOOLEAN NOT NULL DEFAULT TRUE, verification_reward varchar(255));");
+            CreateTable(connectionString, "users", "CREATE TABLE IF NOT EXISTS users (token varchar(255) ,username VARCHAR(255) NOT NULL PRIMARY KEY ,password VARCHAR(255) NOT NULL,coins int NOT NULL ,name VARCHAR(255) ,bio VARCHAR(255) ,image VARCHAR(255) ,elo int NOT NULL ,wins int NOT NULL ,losses int NOT NULL, first_login BOOLEAN NOT NULL DEFAULT TRUE, first_login_time timestamp, verification_reward varchar(255));");
             CreateTable(connectionString, "packages", "CREATE TABLE IF NOT EXISTS packages (package_id SERIAL PRIMARY KEY, bought BOOLEAN NOT NULL);");
             CreateTable(connectionString, "cards", "CREATE TABLE IF NOT EXISTS cards (id VARCHAR(255) PRIMARY KEY, name VARCHAR(255) NOT NULL, damage DOUBLE PRECISION NOT NULL, package_id INTEGER REFERENCES packages(package_id));");
             CreateTable(connectionString, "user_packages", "CREATE TABLE IF NOT EXISTS user_packages (username VARCHAR(255) REFERENCES users(username), package_id INT REFERENCES packages(package_id), PRIMARY KEY (username, package_id));");
@@ -222,19 +222,42 @@ namespace byenipinar_MTCG
             using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
             {
                 connection.Open();
-                //Muss ich Ihnen erklären
-                //using (NpgsqlCommand updateCommand = new NpgsqlCommand("UPDATE users SET coins = coins, first_login = false, verification_reward = 'verified' WHERE username = @username;", connection))
 
-                // Aktualisiere den Benutzer, um den Bonus hinzuzufügen und first_login auf false zu setzen
-                using (NpgsqlCommand updateCommand = new NpgsqlCommand("UPDATE users SET coins = coins, first_login = false, verification_reward = 'verified' WHERE username = @username;", connection))
+                // Überprüfe, ob die Zeit seit dem ersten Login mehr als eine Minute beträgt
+                using (NpgsqlCommand checkCommand = new NpgsqlCommand("SELECT first_login_time FROM users WHERE username = @username;", connection))
                 {
-                    updateCommand.Parameters.AddWithValue("@username", username);
-                    updateCommand.ExecuteNonQuery();
+                    checkCommand.Parameters.AddWithValue("@username", username);
+
+                    var firstLoginTime = checkCommand.ExecuteScalar();
+
+                    if (firstLoginTime == DBNull.Value)
+                    {
+                        // Erster Login, initialisiere first_login_time mit dem aktuellen Zeitpunkt
+                        using (NpgsqlCommand initializeCommand = new NpgsqlCommand("UPDATE users SET first_login_time = @now WHERE username = @username;", connection))
+                        {
+                            initializeCommand.Parameters.AddWithValue("@username", username);
+                            initializeCommand.Parameters.AddWithValue("@now", DateTime.Now);
+
+                            initializeCommand.ExecuteNonQuery();
+                        }
+                    }
+                    else if (firstLoginTime != DBNull.Value && DateTime.Now > ((DateTime)firstLoginTime).AddHours(1))/*if (DateTime.Now > ((DateTime)firstLoginTime).AddMinutes(1))*/
+                    {
+                        // Aktualisiere den Benutzer, um den Bonus hinzuzufügen und first_login auf false zu setzen
+                        using (NpgsqlCommand updateCommand = new NpgsqlCommand("UPDATE users SET coins = coins + 20, first_login = false, verification_reward = 'verified' WHERE username = @username;", connection))
+                        {
+                            updateCommand.Parameters.AddWithValue("@username", username);
+                            updateCommand.ExecuteNonQuery();
+                        }
+                    }
                 }
 
                 connection.Close();
             }
         }
+
+
+
 
         public bool IsUserVerified(string token)
         {
