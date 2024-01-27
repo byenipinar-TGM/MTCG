@@ -39,8 +39,8 @@ namespace byenipinar_MTCG
             DropTable(connectionString, "cards");
             DropTable(connectionString, "packages");
             DropTable(connectionString, "users");
-            
-            CreateTable(connectionString, "users", "CREATE TABLE IF NOT EXISTS users (token varchar(255) ,username VARCHAR(255) NOT NULL PRIMARY KEY ,password VARCHAR(255) NOT NULL,coins int NOT NULL ,name VARCHAR(255) ,bio VARCHAR(255) ,image VARCHAR(255) ,elo int NOT NULL ,wins int NOT NULL ,losses int NOT NULL);");
+
+            CreateTable(connectionString, "users", "CREATE TABLE IF NOT EXISTS users (token varchar(255) ,username VARCHAR(255) NOT NULL PRIMARY KEY ,password VARCHAR(255) NOT NULL,coins int NOT NULL ,name VARCHAR(255) ,bio VARCHAR(255) ,image VARCHAR(255) ,elo int NOT NULL ,wins int NOT NULL ,losses int NOT NULL, first_login BOOLEAN NOT NULL DEFAULT TRUE);");
             CreateTable(connectionString, "packages", "CREATE TABLE IF NOT EXISTS packages (package_id SERIAL PRIMARY KEY, bought BOOLEAN NOT NULL);");
             CreateTable(connectionString, "cards", "CREATE TABLE IF NOT EXISTS cards (id VARCHAR(255) PRIMARY KEY, name VARCHAR(255) NOT NULL, damage DOUBLE PRECISION NOT NULL, package_id INTEGER REFERENCES packages(package_id));");
             CreateTable(connectionString, "user_packages", "CREATE TABLE IF NOT EXISTS user_packages (username VARCHAR(255) REFERENCES users(username), package_id INT REFERENCES packages(package_id), PRIMARY KEY (username, package_id));");
@@ -183,7 +183,7 @@ namespace byenipinar_MTCG
             {
                 connection.Open();
 
-                string selectQuery = "SELECT username, password FROM users WHERE username = @username;";
+                string selectQuery = "SELECT username, password, first_login FROM users WHERE username = @username;";
 
                 using (NpgsqlCommand command = new NpgsqlCommand(selectQuery, connection))
                 {
@@ -195,9 +195,17 @@ namespace byenipinar_MTCG
                         {
                             string storedUsername = reader.GetString(0);
                             string storedPasswordHash = reader.GetString(1);
+                            bool isFirstLogin = reader.GetBoolean(2);
 
                             if (loginUser.Password == storedPasswordHash && loginUser.Username == storedUsername)
                             {
+                                // Überprüfe, ob es sich um den ersten Login handelt
+                                if (isFirstLogin)
+                                {
+                                    // Aktualisiere die Datenbank, um den Bonus hinzuzufügen
+                                    UpdateUserForFirstLogin(loginUser.Username);
+                                }
+
                                 connection.Close();
                                 return true;
                             }
@@ -207,6 +215,23 @@ namespace byenipinar_MTCG
                     connection.Close();
                     return false;
                 }
+            }
+        }
+
+        private void UpdateUserForFirstLogin(string username)
+        {
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                connection.Open();
+
+                // Aktualisiere den Benutzer, um den Bonus hinzuzufügen und first_login auf false zu setzen
+                using (NpgsqlCommand updateCommand = new NpgsqlCommand("UPDATE users SET coins = coins + 20, first_login = false WHERE username = @username;", connection))
+                {
+                    updateCommand.Parameters.AddWithValue("@username", username);
+                    updateCommand.ExecuteNonQuery();
+                }
+
+                connection.Close();
             }
         }
 
