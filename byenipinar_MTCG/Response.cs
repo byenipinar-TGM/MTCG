@@ -81,11 +81,11 @@ namespace byenipinar_MTCG
                 { "succesful_trade_403", "HTTP/1.1 403 Falscher Trade\r\nContent-Type: application/json\r\n\r\n{\"message\": \"The offered card is not owned by the user, or the requirements are not met (Type, MinimumDamage), or the offered card is locked in the deck.\"}\r\n" },
                 { "succesful_trade_404", "HTTP/1.1 404 ID nicht Gefunden\r\nContent-Type: application/json\r\n\r\n{\"message\": \"The provided deal ID was not found.\"}\r\n" },
                 { "succesful_trade_410", "HTTP/1.1 410 User Trade Fehlgeschlagen\r\nContent-Type: application/json\r\n\r\n{\"message\": \"The User wanted to Trade with himself.\"}\r\n" },
-                { "succesful_trade_411", "HTTP/1.1 411 Zu Wenig Damage\r\nContent-Type: application/json\r\n\r\n{\"message\": \"The Damage of the Provided Card is too low.\"}\r\n" }
+                { "succesful_trade_411", "HTTP/1.1 411 Zu Wenig Damage\r\nContent-Type: application/json\r\n\r\n{\"message\": \"The Damage of the Provided Card is too low.\"}\r\n" },
 
-
-
-
+                { "battle_200", "HTTP/1.1 200 Erfolgreich\r\nContent-Type: application/json\r\n\r\n{\"message\": \"The battle has been carried out successfully.\"}\r\n" },
+                { "battle_401", "HTTP/1.1 401 Token Error\r\nContent-Type: application/json\r\n\r\n{\"message\": \"Access token is missing or invalid\"}\r\n" },
+                { "batlle_402", "HTTP/1.1 402 Selber User\r\nContent-Type: application/json\r\n\r\n{\"message\": \"Same User registered twice\"}\r\n" }
             };
 
             // Standardfall

@@ -22,7 +22,9 @@ namespace byenipinar_MTCG
             while (true)
             {
                 TcpClient client = await tcpListener.AcceptTcpClientAsync();
-                await HandleClient(client);
+
+                // Starte die Verarbeitung des Clients in einem separaten Thread
+                Task.Run(() => HandleClient(client));
             }
         }
 
@@ -47,8 +49,9 @@ namespace byenipinar_MTCG
                 // Extrahiere den Anfrage-Body
                 int contentLength = ExtractContentLength(fullRequest);
                 char[] requestBody = new char[contentLength];
-                if (contentLength > 0) { 
-                await reader.ReadAsync(requestBody, 0, contentLength);
+                if (contentLength > 0)
+                {
+                    await reader.ReadAsync(requestBody, 0, contentLength);
                 }
                 string jsonBody = new string(requestBody);
 

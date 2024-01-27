@@ -4,16 +4,33 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Entity;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace byenipinar_MTCG
 {
     public class DataBattleTrade
     {
+        private static readonly object clientLock = new object();
+        private static int connectedClientCount = 0;
+        private static SemaphoreSlim semaphore = new SemaphoreSlim(0, 2);
+
+        private static string username1;
+        private static string username2;
+
+        private static string getConnectionString()
+        {
+            return "Host=" + "localhost" + ";Username=" + "postgres" + ";Password=" + "Pass2020!" + ";Database=" + "MTCG";
+        }
+
+        private static List<(string, double)> user1Cards;
+        private static List<(string, double)> user2Cards;
+
         private string connectionString = "Host=localhost;Database=MTCG;Username=postgres;Password=Pass2020!";
 
         public DataBattleTrade() { }
@@ -424,7 +441,7 @@ namespace byenipinar_MTCG
             }
         }
 
-        public void InsertTrade(string cardToTrade, string id ,string cardType, double minimumDamage, string username)
+        public void InsertTrade(string cardToTrade, string id, string cardType, double minimumDamage, string username)
         {
             try
             {
@@ -490,7 +507,5 @@ namespace byenipinar_MTCG
                 Console.WriteLine("Fehler: " + ex.Message);
             }
         }
-
-
     }
 }

@@ -5,6 +5,8 @@ VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "byenipinar_MTCG", "byenipinar_MTCG.csproj", "{6B0947D6-CE9E-4773-B8CA-6178E3118202}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MTCG_Test", "..\MTCG_Test\MTCG_Test.csproj", "{0D84D714-D6C7-4DA8-A99D-83A19317FA0E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{6B0947D6-CE9E-4773-B8CA-6178E3118202}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6B0947D6-CE9E-4773-B8CA-6178E3118202}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6B0947D6-CE9E-4773-B8CA-6178E3118202}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D84D714-D6C7-4DA8-A99D-83A19317FA0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D84D714-D6C7-4DA8-A99D-83A19317FA0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D84D714-D6C7-4DA8-A99D-83A19317FA0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D84D714-D6C7-4DA8-A99D-83A19317FA0E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

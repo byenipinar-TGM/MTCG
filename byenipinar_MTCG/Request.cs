@@ -21,6 +21,10 @@ namespace byenipinar_MTCG
         public Data db { get; private set; }
         public DataBattleTrade dataBattleTrade { get; private set; }
 
+        public Request()
+        {
+        }
+
         public Request(string Request)
         {
             this.db = new Data();
